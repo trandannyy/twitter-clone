@@ -1,5 +1,5 @@
 # twitter-clone
-[![](https://github.com/trandannyy/twitter-clone/workflows/tests/badge.svg)](https://github.com/trandannyy/twitter-clone/actions?query=workflow%3Atests)
+[![](https://github.com/trandannyy/twitter-clone/workflows/main.yml/badge.svg)](https://github.com/trandannyy/twitter-clone/actions/workflows/main.yml)
 
 # Overview
 
