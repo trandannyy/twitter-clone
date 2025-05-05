@@ -3,11 +3,12 @@ import os
 from flask import Flask, jsonify, send_from_directory, request, render_template, make_response
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
-
+# import sqlalchemy
 
 app = Flask(__name__)
 app.config.from_object("project.config.Config")
 db = SQLAlchemy(app)
+# db_link = "postgresql://hello_flask:hello_flask@localhost:5432/hello_flask_prod"
 
 
 ##############################################
@@ -17,16 +18,15 @@ db = SQLAlchemy(app)
 
 # class User(db.Model):
 #     __tablename__ = "users"
-# 
+#
 #     id = db.Column(db.Integer, primary_key=True)
 #     email = db.Column(db.String(128), unique=True, nullable=False)
 #     active = db.Column(db.Boolean(), default=True, nullable=False)
-# 
+#
 #     def __init__(self, email):
 #         self.email = email
 
 ##############################################
-
 
 @app.route("/")
 def root():
@@ -55,7 +55,35 @@ def print_debug_info():
 
 
 def are_credentials_good(username, password):
-    # look inside DB and check if pw if correct (FIX!)
+    # CORRECT ?
+    # sql = sqlalchemy.sql.text('''
+    # SELECT screen_name, password
+    # FROM users
+    # WHERE screen_name = :username
+    # AND password = :password
+    # ''')
+
+    # engine = sqlalchemy.create_engine(db_link, connect_args={
+    #     'application_name': '__init__.py root()',
+    # })
+    # connection = engine.connect()
+    # res = connection.execute(sql, {
+    #     'username': username,
+    #     'password': password
+    # })
+
+    # return res.first() is not None
+
+    # NEED TO CONNECT TO ENGINE
+    # for row in res.fetchall():
+    #     print('row[0]=,' row[0])
+    #     print('row[1]=,' row[1])
+
+    #     if row[0] == :username and row[1] == :password:
+    #         logged_in = True
+    #     else:
+    #         logged_in = False
+
     if username == 'haxor' and password == '1337':
         return True
     else:
