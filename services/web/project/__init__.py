@@ -3,12 +3,12 @@ import os
 from flask import Flask, jsonify, send_from_directory, request, render_template, make_response
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
-# import sqlalchemy
+import sqlalchemy
 
 app = Flask(__name__)
 app.config.from_object("project.config.Config")
 db = SQLAlchemy(app)
-# db_link = "postgresql://hello_flask:hello_flask@localhost:5432/hello_flask_prod"
+db_link = "postgresql://hello_flask:hello_flask@localhost:5432/hello_flask_dev"
 
 
 ##############################################
@@ -56,23 +56,23 @@ def print_debug_info():
 
 def are_credentials_good(username, password):
     # CORRECT ?
-    # sql = sqlalchemy.sql.text('''
-    # SELECT screen_name, password
-    # FROM users
-    # WHERE screen_name = :username
-    # AND password = :password
-    # ''')
+    sql = sqlalchemy.sql.text('''
+    SELECT screen_name, password
+    FROM users
+    WHERE screen_name = :username
+    AND password = :password
+    ''')
 
     # engine = sqlalchemy.create_engine(db_link, connect_args={
     #     'application_name': '__init__.py root()',
     # })
     # connection = engine.connect()
-    # res = connection.execute(sql, {
-    #     'username': username,
-    #     'password': password
-    # })
+    res = db.session.execute(sql, {
+        'username': username,
+        'password': password
+    })
 
-    # return res.first() is not None
+    return res.first() is not None
 
     # NEED TO CONNECT TO ENGINE
     # for row in res.fetchall():
@@ -84,10 +84,10 @@ def are_credentials_good(username, password):
     #     else:
     #         logged_in = False
 
-    if username == 'haxor' and password == '1337':
-        return True
-    else:
-        return False
+    # if username == 'haxor' and password == '1337':
+    #     return True
+    # else:
+    #     return False
 
 
 @app.route("/login", methods=['GET', 'POST'])
@@ -103,17 +103,17 @@ def login():
 
     # first visit means no form submission
     if username is None:
-        return render_template('login.html', bad_credentials=False)
+        return render_template('login.html', bad_credentials=False, created=False)
 
     # form submitted, use POST method
     else:
         if not good_credentials:
-            return render_template('login.html', bad_credentials=True)
+            return render_template('login.html', bad_credentials=True, created=False)
         else:
             # if we get here, then logged in!
             # create cookies with username and password
 
-            template = render_template('login.html', bad_credentials=False, logged_in=True)
+            template = render_template('login.html', bad_credentials=False, created=False, logged_in=True)
 
             # return template
 
@@ -128,13 +128,71 @@ def logout():
     print_debug_info()
     resp = make_response(render_template('logout.html', logged_in=False))
     resp.set_cookie('username', expires=0)
+    resp.set_cookie('password', expires=0)
     return resp
     # return render_template('logout.html')
 
 
-@app.route("/create_user")
+def valid_username(username):
+    # check uniqueness of username
+    sql = sqlalchemy.sql.text('''
+    SELECT screen_name
+    FROM users
+    WHERE screen_name = :username
+    ''')
+    res = db.session.execute(sql, {
+        'username': username
+        })
+
+    unique = True
+    for row in res.fetchall():
+        if row[0] == username:
+            unique = False 
+            break
+    return unique
+
+def valid_password(password, retyped):
+    return (password == retyped)
+
+@app.route("/create_user", methods=['GET', 'POST'])
 def create_user():
-    return render_template("create_user.html")
+    print_debug_info()
+    username = request.form.get('username')
+    password = request.form.get('password')
+    retyped = request.form.get('retype password')
+    print('username=', username)
+    print('password=', password)
+    print('retyped=', retyped)
+
+    # first visit
+    if retyped is None:
+        return render_template("create_user.html", identical_user=False, password_different=False)
+    # form submitted
+    else:
+        if valid_username(username) and not valid_password(password, retyped):
+            return render_template("create_user.html", identical_user=False, password_different=True)
+        elif not valid_username(username) and valid_password(password, retyped):
+            return render_template("create_user.html", identical_user=True, password_different=False)
+        elif not valid_username(username) and not valid_password(password, retyped):
+            return render_template("create_user.html", identical_user=True, password_different=True)
+        else:
+            template = render_template("create_user.html", identical_user=False, password_different=False)
+            
+            sql = sqlalchemy.sql.text('''
+            INSERT INTO users (id_users, screen_name, password)
+            VALUES (:id_users, :username, :password)
+            ''')
+            res = db.session.execute(sql, {
+            'id_users': 1010101023,
+            'username': username,
+            'password': password
+            })
+            db.session.commit();
+
+            return render_template("login.html", bad_credentials=False, created=True)
+        # HOW DO I GET RANDOM id_users???
+
+    # return render_template("create_user.html", identical_user=True, password_wrong=True)
 
 
 @app.route("/create_message")

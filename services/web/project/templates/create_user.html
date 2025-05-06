@@ -1,21 +1,20 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>Login Webpage</h2>
+<h2>Create an account!</h2>
 
-{% if created %}
-<p style="color: green;">
-    Account created, log in!
-</p>
-{% endif %}
-
-{% if bad_credentials %}
+{% if identical_user %}
 <p style="color: red;">
-    ERROR: Username or password incorrect.
+    ERROR: Username already exists!
 </p>
 {% endif %}
 
-<form action='/login' method="POST">
+{% if password_different %}
+<p style="color: red;">
+    ERROR: Please make sure your passwords are the same.
+</p>
+{% endif %}
+<form action='/create_user' method="POST">
     <table>
         <tr>
             <td>username</td>
@@ -26,10 +25,12 @@
             <td><input type=text name=password></td>
         </tr>
         <tr>
+            <td>retype password</td>
+            <td><input type=text name='retype password'</td>
+        <tr>
             <td></td>
-            <td><input type=submit value='login'></td>
+            <td><input type=submit value='create'></td>
         </tr>
     </table>
 </form>
-<p>New information.</p>
 {% endblock %}

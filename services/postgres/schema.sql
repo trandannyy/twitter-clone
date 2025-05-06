@@ -30,4 +30,7 @@ CREATE TABLE tweets (
 -- index for username-password search
 CREATE INDEX userpw_index ON users(screen_name, password);
 
+-- index for username lookup
+CREATE INDEX username_index ON users(screen_name);
+
 COMMIT;
