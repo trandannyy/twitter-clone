@@ -12,14 +12,14 @@ CREATE TABLE urls (
 );
 
 CREATE TABLE users (
-    id_users BIGINT PRIMARY KEY,
+    id_users BIGSERIAL PRIMARY KEY,
     id_urls BIGINT REFERENCES urls(id_urls),
     screen_name TEXT,
     password TEXT
 );
 
 CREATE TABLE tweets (
-    id_tweets BIGINT PRIMARY KEY,
+    id_tweets BIGSERIAL PRIMARY KEY,
     id_users BIGINT,
     created_at TIMESTAMPTZ,
     text TEXT
@@ -32,5 +32,8 @@ CREATE INDEX userpw_index ON users(screen_name, password);
 
 -- index for username lookup
 CREATE INDEX username_index ON users(screen_name);
+
+-- index for message sort
+CREATE INDEX craeted_at_index ON tweets(created_at);
 
 COMMIT;

@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<form action='/create_message' method="POST">
+    <table>
+        <tr>
+            <td>Make a post!</td>
+        </tr>
+        <tr>
+            <td><input type=text name=text_box size="50"></td>
+            <td td colspan="2" align="right"><input type=submit value='post'></td>
+        </tr>
+    </table>
+
+</form>
+
+{% if created %}
+<p style="color: green;">
+Message posted!
+</p>
+{% endif %}
+
+{% endblock %}
+
+

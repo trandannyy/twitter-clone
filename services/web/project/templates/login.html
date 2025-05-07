@@ -3,12 +3,6 @@
 {% block content %}
 <h2>Login Webpage</h2>
 
-{% if created %}
-<p style="color: green;">
-    Account created, log in!
-</p>
-{% endif %}
-
 {% if bad_credentials %}
 <p style="color: red;">
     ERROR: Username or password incorrect.
@@ -31,5 +25,4 @@
         </tr>
     </table>
 </form>
-<p>New information.</p>
 {% endblock %}

@@ -1,9 +1,10 @@
 import os
 
-from flask import Flask, jsonify, send_from_directory, request, render_template, make_response
+from flask import Flask, jsonify, send_from_directory, request, render_template, make_response, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 import sqlalchemy
+import datetime
 
 app = Flask(__name__)
 app.config.from_object("project.config.Config")
@@ -36,8 +37,32 @@ def root():
     username = request.cookies.get('username')
     password = request.cookies.get('password')
     good_credentials = are_credentials_good(username, password)
+    page = int(request.args.get('page', 0))
 
-    return render_template('root.html', logged_in=good_credentials, messages=messages)
+    offset = 20*page
+    print("offset=", offset)
+
+    # messages
+    sql = sqlalchemy.sql.text('''
+    SELECT screen_name, text, created_at
+    FROM tweets
+    JOIN users USING (id_users)
+    ORDER BY created_at DESC
+    LIMIT 20 OFFSET :offset
+    ''')
+
+    res = db.session.execute(sql, {
+        'offset': offset
+    })
+
+    for row in res.fetchall():
+        messages.append({
+            'screen_name': row[0],
+            'text': row[1],
+            'created_at': row[2]
+        })
+
+    return render_template('root.html', logged_in=good_credentials, messages=messages, page=page, total_pages = 10)
 
 
 def print_debug_info():
@@ -113,11 +138,11 @@ def login():
             # if we get here, then logged in!
             # create cookies with username and password
 
-            template = render_template('login.html', bad_credentials=False, created=False, logged_in=True)
+            # template = render_template('login.html', bad_credentials=False, created=False, logged_in=True, firstlog = True)
 
             # return template
 
-            response = make_response(template)
+            response = make_response(redirect(url_for('root')))
             response.set_cookie('username', username)
             response.set_cookie('password', password)
             return response
@@ -176,28 +201,61 @@ def create_user():
         elif not valid_username(username) and not valid_password(password, retyped):
             return render_template("create_user.html", identical_user=True, password_different=True)
         else:
-            template = render_template("create_user.html", identical_user=False, password_different=False)
-            
+            # template = render_template("create_user.html", identical_user=False, password_different=False)
             sql = sqlalchemy.sql.text('''
-            INSERT INTO users (id_users, screen_name, password)
-            VALUES (:id_users, :username, :password)
+            INSERT INTO users (screen_name, password)
+            VALUES (:username, :password)
             ''')
             res = db.session.execute(sql, {
-            'id_users': 1010101023,
             'username': username,
             'password': password
             })
-            db.session.commit();
+            db.session.commit()
 
-            return render_template("login.html", bad_credentials=False, created=True)
-        # HOW DO I GET RANDOM id_users???
-
-    # return render_template("create_user.html", identical_user=True, password_wrong=True)
+            return render_template("create_user.html", created=True)
 
 
-@app.route("/create_message")
+@app.route("/create_message", methods=['GET', 'POST'])
 def create_message():
-    return render_template("create_message.html")
+    print_debug_info()
+    username = request.cookies.get('username')
+    print('username=', username)
+    message = request.form.get('text_box')
+    
+    sql2 = sqlalchemy.sql.text('''
+    SELECT id_users, screen_name
+    FROM users
+    WHERE screen_name = :username
+    LIMIT 1
+    ''')
+
+    res2 = db.session.execute(sql2, {
+        'username': username
+    })
+    cur_id = None
+    for row in res2.fetchall():
+        cur_id = row[0]
+    print('cur_id=', cur_id)
+
+    cur_time = datetime.datetime.now()
+    # remove microseconds to make formatting uniform
+    adj_cur_time = cur_time.replace(microsecond=0)
+
+    if message is not None:
+        sql = sqlalchemy.sql.text('''
+        INSERT INTO tweets (text, id_users, created_at)
+        VALUES (:text, :id_users, :created_at)
+        ''')
+        res = db.session.execute(sql, {
+            'text': message,
+            'id_users': cur_id,
+            'created_at': adj_cur_time 
+        })
+        db.session.commit()
+
+        return render_template("create_message.html", created=True, logged_in=True)
+    else:
+        return render_template("create_message.html", logged_in=True)
 
 
 @app.route("/search")

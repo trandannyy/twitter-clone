@@ -3,6 +3,12 @@
 {% block content %}
 <h2>Create an account!</h2>
 
+{% if created %}
+<p style="color: green;">
+    Account created, log in!
+</p>
+{% endif %}
+
 {% if identical_user %}
 <p style="color: red;">
     ERROR: Username already exists!
