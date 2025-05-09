@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<form action='/search'>
+    <table>
+        <tr>
+            <td>Search</td>
+        </tr>
+        <tr>
+            <td><input type=text name=search_box size="50"></td>
+            <td td colspan="2" align="right"><input type=submit value='find'></td>
+        </tr>
+    </table>
+</form>
+
+{% if searched %}
+    {% for message in messages %}
+        {% if message %}
+            <div style="border: 1px solid black; padding: 10px;">
+                {% for key, value in message.items() %}
+                    {% if key == 'screen_name' %}
+                        <u style="color: #0892D0;"><b>{{ value }}</b></u><br>
+                    {% elif key == 'created_at' %}
+                        <i style="float: right;">{{ value }}</i><br>
+                    {% else %}
+                        {{ value }}<br>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endfor %}
+    {% if noMatch %}
+        <p>
+            No tweets were found. Try another query?
+        </p>
+    {% else %}
+    <a style="float: right; padding-bottom: 20px;" href="?page={{ page + 1 }}&search_box={{ query }}">next &#8594;</a>
+        {% if page > 0 %}
+        <a style="padding-bottom: 20px;" href="?page={{ page - 1 }}&search_box={{ query }}">&#8592; previous</a>
+        {% endif %}
+    {% endif %}
+
+{% endif %}
+{% endblock %}

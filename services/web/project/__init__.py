@@ -1,10 +1,11 @@
 import os
-
 from flask import Flask, jsonify, send_from_directory, request, render_template, make_response, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 import sqlalchemy
 import datetime
+import logging
+from markupsafe import Markup
 
 app = Flask(__name__)
 app.config.from_object("project.config.Config")
@@ -39,7 +40,7 @@ def root():
     good_credentials = are_credentials_good(username, password)
     page = int(request.args.get('page', 0))
 
-    offset = 20*page
+    offset = 20 * page
     print("offset=", offset)
 
     # messages
@@ -62,7 +63,7 @@ def root():
             'created_at': row[2]
         })
 
-    return render_template('root.html', logged_in=good_credentials, messages=messages, page=page, total_pages = 10)
+    return render_template('root.html', logged_in=good_credentials, messages=messages, page=page)
 
 
 def print_debug_info():
@@ -167,17 +168,19 @@ def valid_username(username):
     ''')
     res = db.session.execute(sql, {
         'username': username
-        })
+    })
 
     unique = True
     for row in res.fetchall():
         if row[0] == username:
-            unique = False 
+            unique = False
             break
     return unique
 
+
 def valid_password(password, retyped):
     return (password == retyped)
+
 
 @app.route("/create_user", methods=['GET', 'POST'])
 def create_user():
@@ -206,9 +209,9 @@ def create_user():
             INSERT INTO users (screen_name, password)
             VALUES (:username, :password)
             ''')
-            res = db.session.execute(sql, {
-            'username': username,
-            'password': password
+            db.session.execute(sql, {
+                'username': username,
+                'password': password
             })
             db.session.commit()
 
@@ -221,7 +224,7 @@ def create_message():
     username = request.cookies.get('username')
     print('username=', username)
     message = request.form.get('text_box')
-    
+
     sql2 = sqlalchemy.sql.text('''
     SELECT id_users, screen_name
     FROM users
@@ -246,10 +249,10 @@ def create_message():
         INSERT INTO tweets (text, id_users, created_at)
         VALUES (:text, :id_users, :created_at)
         ''')
-        res = db.session.execute(sql, {
+        db.session.execute(sql, {
             'text': message,
             'id_users': cur_id,
-            'created_at': adj_cur_time 
+            'created_at': adj_cur_time
         })
         db.session.commit()
 
@@ -260,7 +263,54 @@ def create_message():
 
 @app.route("/search")
 def search():
-    return render_template("search.html")
+    print_debug_info()
+    username = request.cookies.get('username')
+    password = request.cookies.get('password')
+    good_credentials = are_credentials_good(username, password)
+
+    page = int(request.args.get('page', 0))
+    messages = []
+    user_query = request.args.get('search_box')
+
+    print('user_query=', user_query)
+    # offset = 20 * page
+    # noMatch = False
+    # print("offset=", offset)
+    # print("user_query?=", user_query is not None)
+
+    if user_query is not None:
+        offset = 20 * page
+        noMatch = False
+        print("offset=", offset)
+
+        # messages
+        sql = sqlalchemy.sql.text('''
+        SELECT screen_name, ts_headline(text, phraseto_tsquery(:tsquery)), created_at
+        FROM tweets
+        JOIN users USING (id_users)
+        WHERE to_tsvector('english', text) @@ phraseto_tsquery(:tsquery)
+        ORDER BY ts_rank(to_tsvector('english', text), phraseto_tsquery(:tsquery)) DESC, created_at DESC
+        LIMIT 20 OFFSET :offset
+        ''')
+
+        res = db.session.execute(sql, {
+            'offset': offset,
+            'tsquery': user_query
+        })
+
+        for row in res.fetchall():
+            messages.append({
+                'screen_name': row[0],
+                'text': Markup(row[1]),
+                'created_at': row[2]
+            })
+        noMatch = (len(messages) == 0)
+
+        logging.error('path1')
+        return render_template("search.html", logged_in=good_credentials, messages=messages, page=page, searched=True, noMatch=noMatch, query=user_query)
+    else:
+        logging.error('path2')
+        return render_template("search.html", logged_in=good_credentials, searched=False)
 
 
 # def hello_world():

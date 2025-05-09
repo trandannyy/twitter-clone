@@ -39,8 +39,6 @@
     <a style="padding-bottom: 20px;" href="?page={{ page - 1 }}">&#8592; previous</a>
 {% endif %}
 
-{% if page < total_pages %}
-    <a style="float: right; padding-bottom: 20px;" href="?page={{ page + 1 }}">next &#8594;</a>
-{% endif %}
+<a style="float: right; padding-bottom: 20px;" href="?page={{ page + 1 }}">next &#8594;</a>
 
 {% endblock %}

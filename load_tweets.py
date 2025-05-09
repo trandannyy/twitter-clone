@@ -378,8 +378,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--db',required=True)
     parser.add_argument('--inputs',nargs='+',required=True)
-    parser.add_argument('--print_every',type=int,default=1)
-    parser.add_argument('--num_tweets',default=10)
+    parser.add_argument('--print_every',type=int,default=1000)
+    parser.add_argument('--num_tweets',default=100)
     args = parser.parse_args()
 
     # create database connection
