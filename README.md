@@ -83,3 +83,19 @@ $ bash load_tweets_large.sh
 Note that you will have to create a file named `.env.prod file` that is similar to `.env.dev` and a file named `.env.prod.db` with `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` defined.
 
 Once the data is loaded in, you are ready to view the website. Using a search engine of your choice, go to "localhost:YOURPORT" and test out the website!
+
+If you would like to bring down the containers, you can run these commands (depending on which docker-compose file you are using:
+
+```
+$ docker compose down
+```
+
+OR
+
+```
+$ docker compose -f docker-compose.prod.yml down
+```
+
+*Note that bringing the containers down does not delete the data because they are stored in the volumes. To also delete the data, simply add* `-v` *to the end of the command you use.*
+
+*You can add -v to the end 
