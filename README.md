@@ -97,5 +97,3 @@ $ docker compose -f docker-compose.prod.yml down
 ```
 
 *Note that bringing the containers down does not delete the data because they are stored in the volumes. To also delete the data, simply add* `-v` *to the end of the command you use.*
-
-*You can add -v to the end 
