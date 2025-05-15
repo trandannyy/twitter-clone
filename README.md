@@ -80,7 +80,7 @@ OR
 $ bash load_tweets_large.sh
 ```
 
-Note that you will have to create a file named `.env.prod file` that is similar to `.env.dev` and a file named `.env.prod.db` with `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` defined.
+Note that you will have to create a file named `.env.prod` file that is similar to `.env.dev` and a file named `.env.prod.db` with `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` defined.
 
 Once the data is loaded in, you are ready to view the website. Using a search engine of your choice, go to "localhost:YOURPORT" and test out the website!
 
